@@ -22,6 +22,9 @@ This sub-directory contains 1 python API script and 1 python API tester script (
         - ***East US***
         - ***East US 2***
 ### Python API tester scripts 
+
+<img width="955" alt="flow_chart_apimapi_v1" src="https://github.com/user-attachments/assets/d593b7d3-acbc-403b-b717-45a5bb879e2f">
+
 Note: All tester scripts located in `/api_testers`
 1. `call_apim_api.py`: Designed to test the apim_api using eligible GPT models specifically for chat scenarios where Retrieval-Augmented Generation (RAG) is not needed. 
 2. `call_apim_index.py`: Designed to test the apim_api using eligible ADA models specifically for indexing scenarios, where embeddings for documents are generated. 
