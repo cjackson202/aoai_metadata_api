@@ -7,7 +7,7 @@
 ## Contents  
 This sub-directory contains 1 python API script and 3 python API tester scripts (Chat, RAG (Index), RAG (Query)):  
 ### Python API script
-1. `code_api.py`: This is a FastAPI python application created to insert the Azure OpenAI metadata into the MySQL database after each completion from the API call. 
+1. `code_api.py`: Python API script created to insert the Azure OpenAI metadata into the MySQL database after each completion from the API call. 
 Use this api when you call directly in your code.  
     To date, only the following Azure OpenAI components are compatible with this API:  
     - **Models**:  
