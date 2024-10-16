@@ -20,7 +20,7 @@ Use this api when you call directly in your code.
         - ***East US 2***
 ### Python API tester scripts 
 
-<img width="953" alt="flow_chart_codeapi_v1" src="https://github.com/user-attachments/assets/3f843fca-12fb-41ef-8002-c6a339a1b891">
+<img width="905" alt="flow_chart_codeapi_v1" src="https://github.com/user-attachments/assets/978bb9e5-17c8-472a-8222-63a88cdc43a8">
 
 Note: All tester scripts located in `/api_testers`
 1. `call_norag_api.py`: Designed to test the code_api using eligible GPT models specifically for chat scenarios where Retrieval-Augmented Generation (RAG) is not needed. 
