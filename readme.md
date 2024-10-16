@@ -47,6 +47,25 @@ pip install -r requirements.txt
     ngrok_authtoken = "ngrok token to convert local api to public domain (for testing only)"
 ```  
 
+## Security Best Practices for Using APIs  
+  
+### 1. Store API Secrets Securely  
+- **Environment Variables**: Always store your API secrets in environment variables, typically in a `.env` file. This isolates sensitive information from your codebase, reducing the risk of accidental exposure. Environment variables can be configured and stored in Azure App Service once deployed. 
+- **Version Control**: By default, the `.env` file for storing secrets have been added to `.gitignore`, preventing thos file from being tracked by version control systems like Git.  
+- **Access Control**: Restrict access to the environment variables to only those who need it. Use role-based access controls (RBAC) to enforce this.  
+  
+### 2. Network Restrictions  
+- **IP Whitelisting**: By default, the resources created in Azure using the provided ARM templates in this repository have network restrictions that limit access to your specific IPV4 address. This adds an extra layer of security by ensuring that only trusted IP addresses can access these resources:
+  - **App Service**: Ensures that only traffic from your specified IPV4 address can reach your app service.  
+  - **Cosmos DB**: Limits database access to your specified IPV4 address, reducing the risk of unauthorized data access.  
+  - **MySQL Flexible Server**: Restricts database access to your specified IPV4 address, enhancing security.  
+  
+### 3. Extra Security Considerations
+- **Encryption**: Ensure that all data transmitted to and from your APIs is encrypted using HTTPS. Azure takes care of this when deployed to an App Service.  
+- **API Gateway**: Utilize an API Gateway such as ***Azure API Management (APIM)*** to manage, secure, and monitor your API traffic. APIM offers features like rate limiting, IP whitelisting, and detailed analytics, which can significantly enhance the security and performance of your APIs.  
+- **Authentication and Authorization**: Implement authentication and authorization mechanisms to ensure that only authorized users and applications can access your APIs. Consider using standards like OAuth 2.0 and JWT (JSON Web Tokens) with APIM.  
+- **Regular Audits**: Periodically review and audit your security practices to identify and address potential vulnerabilities.  
+
 ## Additional Resources  
   
 For further reading and additional support, you might find the following resources helpful:  
