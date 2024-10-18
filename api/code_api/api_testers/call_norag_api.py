@@ -60,7 +60,7 @@ while True:
         "region": "East US 2",  # Input your AOAI resource region here
         "project": "Disney Character (API Test)",  # Input your project name here. Following the system prompt for this test currently :)
         "api_name": url, # Input the url of the API used. 
-        "database": "cosmosdb" # Specify here cosmosdb or mysql as database. 
+        "database": "mysqldb" # Specify here cosmosdb or mysql as database. 
     }  
     
     response = requests.post(url, headers={"Content-Type": "application/json"}, data=json.dumps(data))  

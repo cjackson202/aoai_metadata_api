@@ -31,11 +31,11 @@
       }  
     },
     "container_registry_name": {
-        "defaultValue": "aoaiapiregistry",
+        "defaultValue": "aoaiapiregistry02",
         "type": "String"
     },
     "serverfarms_appserviceplan_name": {
-        "defaultValue": "aoaiapi-plan",
+        "defaultValue": "aoaiapi-plan02",
         "type": "String"
     },
     "app_service_deployment_name": {  

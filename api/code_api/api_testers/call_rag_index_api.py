@@ -76,7 +76,7 @@ data = {
     "region": "East US 2",  # Input your AOAI resource region here
     "project": "Embeddings Index (API Test)",  # Input your project name here. Following the system prompt for this test currently :)
     "api_name": url,  # Input the url of the API used. 
-    "database": "cosmosdb" # Set to cosmosdb or mysqldb depending on desired platform
+    "database": "mysqldb" # Set to cosmosdb or mysqldb depending on desired platform
 }  
 
 response = requests.post(url, headers={"Content-Type": "application/json"}, data=json.dumps(data))  

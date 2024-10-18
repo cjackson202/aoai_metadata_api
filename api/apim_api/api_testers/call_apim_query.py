@@ -75,7 +75,7 @@ while True:
             "version_model": "2024-05-13, 2",  # Input your model version here. NOT API VERSION.
             "region": "East US 2",  # Input your AOAI resource region here
             "project": "Retriever (API Test)",  # Input your project name here. 
-            "database": "mysqldb",  # Specify here cosmosdb or mysql as database.
+            "database": "cosmosdb",  # Specify here cosmosdb or mysql as database.
             "retrieve": "True"  # Must specify True or False here as string.
         })
 

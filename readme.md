@@ -10,6 +10,10 @@ This repository offers a complete solution to capturing essential metadata from 
 ## Getting started
 To get started with this repository, please set up you environment in the following steps:
 
+**Build the Azure environment**
+- For directions on building the Azure architecture for API's, please [click here](architecture_setup/readme.md).
+  - To ***execute the API's locally***, you will need ***access*** to at least the created ***mysql server*** or ***cosmos db***.  
+
 **Create .venv environment in code interpretor**
 - Steps reflect creating .venv in VsCode
 ```
@@ -46,6 +50,7 @@ pip install -r requirements.txt
     APIM_EMBEDDINGS_URL = "APIM AOAI Embeddings URL"
     ngrok_authtoken = "ngrok token to convert local api to public domain (for testing only)"
 ```  
+- ***Note: Env variables in Azure will not need "" at each end of the string.***
 
 ## Security Best Practices for Using APIs  
   
@@ -70,9 +75,9 @@ pip install -r requirements.txt
   
 For further reading and additional support, you might find the following resources helpful:  
   
-- ['Azure OpenAI Models Pricing'](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/)  
-- ['Azure Database for MySQL'](https://learn.microsoft.com/en-us/azure/mysql/)  
-- ['MySQL Workbench Installer'](https://dev.mysql.com/downloads/workbench/)  
-- ['Azure OpenAI PTU'](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/provisioned-throughput-onboarding)  
-- ['TikToken - OpenAI LLM Token Counter'](https://github.com/openai/tiktoken)
+- [Azure OpenAI Models Pricing](https://azure.microsoft.com/en-us/pricing/details/cognitive-services/openai-service/)  
+- [Azure Database for MySQL](https://learn.microsoft.com/en-us/azure/mysql/)  
+- [MySQL Workbench Installer](https://dev.mysql.com/downloads/workbench/)  
+- [Azure OpenAI PTU](https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/provisioned-throughput-onboarding)  
+- [TikToken - OpenAI LLM Token Counter](https://github.com/openai/tiktoken)
   
