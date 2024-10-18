@@ -42,8 +42,8 @@ Use the MySQl Installer to download MySQL Workbench. MySQL Workbench is a unifie
     5. At this point, the schema `aoai_api` should be created in your server. 
 
 5. [Push API Docker Image to the created ACR from step 2](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli?tabs=azure-powershell): DockerFile provided for all API's in their perspective directory. Click a link below to be navigated to each:
-    - [apim_api](api/apim_api/Dockerfile)
-    - [code_api](api/code_api/Dockerfile)
+    - [apim_api](../api/apim_api/Dockerfile)
+    - [code_api](../api/code_api/Dockerfile)
     
     **You can build and push the Docker image all in one command using**:
     ```shell
@@ -77,8 +77,8 @@ Use the MySQl Installer to download MySQL Workbench. MySQL Workbench is a unifie
     ```
 
 2. [Push API Docker Image to the created ACR from step 2](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli?tabs=azure-powershell): DockerFile provided for all API's in their perspective directory. Click a link below to be navigated to each:
-    - [apim_api](api/apim_api/Dockerfile)
-    - [code_api](api/code_api/Dockerfile)
+    - [apim_api](../api/apim_api/Dockerfile)
+    - [code_api](../api/code_api/Dockerfile)
     
     **You can build and push the Docker image all in one command using**:
     ```shell
