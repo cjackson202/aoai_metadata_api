@@ -37,6 +37,14 @@ for indexing scenarios, where embeddings for documents are generated.
     azure_mysql_schema = "MySQL schema (should be aoai_api)"  
     azure_cosmosdb_key = "Azure CosmosDB api key"
     azure_cosmosdb_endpoint = "Azure CosmosDB endpoint"
+    OPENAI_API_BASE = "AOAI Endpoint"  
+    OPENAI_API_VERSION = "AOAI API Version"  
+    OPENAI_API_KEY = "AOAI API Key"  
+    OPENAI_GPT_MODEL = "AOAI GPT Model deployment name" 
+    OPENAI_ADA_MODEL = "AOAI ADA Model deployment name" 
+    AZURE_AI_SEARCH_URL = "Azure AI Search endpoint (needed for RAG testers only)"
+    AZURE_AI_SEARCH_KEY = "Azure AI Search key (needed for RAG testers only)"
+    AZURE_AI_SEARCH_INDEX = 'Azure AI Search index name (needed for RAG testers only)'
 ```  
 2. **Navigate to the code_api Directory:**  
 ```sh  

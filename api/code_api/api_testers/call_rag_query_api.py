@@ -91,11 +91,12 @@ while True:
     sources = [] 
     page_contents = []
     search_scores = []
+    # print(chain)
     for doc in chain['context']:
         source = doc.metadata['metadata']
         page_content = doc.page_content
         search_score = doc.metadata['@search.score']
-        print(type(search_score))
+        # print(type(search_score))
         sources.append(source)
         page_contents.append(page_content)
         search_scores.append(search_score)

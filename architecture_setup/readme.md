@@ -53,7 +53,7 @@ Use the MySQl Installer to download MySQL Workbench. MySQL Workbench is a unifie
 
 ## CosmosDB Setup
 
-1. [Execute the ARM Template](mysql/cosmos_arm.json): To create all the Azure resources for this API, execute the following ARM template from Azure CLI `cosmos_arm.json`. 
+1. [Execute the ARM Template](cosmos/cosmos_arm.json): To create all the Azure resources for this API, execute the following ARM template from Azure CLI `cosmos_arm.json`. 
     - Modify the parameter names and values as applicable. 
     - If using APIM, you will need to allow the APIM resource public IP through firewall. 
 
@@ -76,7 +76,7 @@ Use the MySQl Installer to download MySQL Workbench. MySQL Workbench is a unifie
     az deployment group create --resource-group <insert your RG> --template-file cosmos_arm.json`
     ```
 
-2. [Push API Docker Image to the created ACR from step 2](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli?tabs=azure-powershell): DockerFile provided for all API's in their perspective directory. Click a link below to be navigated to each:
+2. [Push API Docker Image to the created ACR from step 1](https://learn.microsoft.com/en-us/azure/container-registry/container-registry-get-started-docker-cli?tabs=azure-powershell): DockerFile provided for all API's in their perspective directory. Click a link below to be navigated to each:
     - [apim_api](../api/apim_api/Dockerfile)
     - [code_api](../api/code_api/Dockerfile)
     

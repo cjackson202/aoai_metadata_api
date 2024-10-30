@@ -39,6 +39,8 @@ To use the each of the tester python file, complete the following:
     azure_mysql_schema = "MySQL schema (should be aoai_api)"  
     azure_cosmosdb_key = "Azure CosmosDB api key"
     azure_cosmosdb_endpoint = "Azure CosmosDB endpoint"
+    OPENAI_GPT_MODEL = "AOAI GPT Model deployment name" 
+    OPENAI_ADA_MODEL = "AOAI ADA Model deployment name" 
     APIM_API_KEY = "APIM API Key"
     APIM_COMPLETIONS_URL = "APIM AOAI Completions URL"
     APIM_EMBEDDINGS_URL = "APIM AOAI Embeddings URL"
