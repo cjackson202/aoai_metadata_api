@@ -1,6 +1,6 @@
-# Azure OpenAI MySQL/Cosmos API
+# Azure OpenAI Metadata API
 
-This repository offers a complete solution to capturing essential metadata from Azure OpenAI API calls. 
+This repository provides a comprehensive solution for capturing and storing essential metadata from Azure OpenAI API calls. It supports integration with both **MySQL** and **Cosmos** databases, ensuring flexibility and scalability for your data management needs.
 
 ## API's 
 [Choosing an API](api/readme.md)
