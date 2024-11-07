@@ -2,11 +2,10 @@
 This script is designed to test the MySQL API using eligible GPT and ADA models specifically 
 for RAG scenarios, where embeddings for queries are generated and documents are retrieved from Azure AI Search.
 
-Findings:
-- Azure AI Search uses a default embedding model if no custom model is specified.
-- To use your own model, specify model in AzureSearch(). Then call model in embedding_function parameter in the AzureAISearchRetriever().
+Update:
+- Streaming option now added to ai_response (see lines 84-88 on how to use streaming)
 
-Update 9/23/24
+Updated 11/7/24
 '''
 
 import os
@@ -42,7 +41,8 @@ def get_time():
 
 retriever = AzureAISearchRetriever(service_name=address,api_key=password,top_k=1, index_name=index_name)
 # Create your LLM object, which is the LLM service provider
-llm = AzureChatOpenAI(azure_endpoint=endpoint, api_key=api_key, api_version=api_version, azure_deployment=gpt_model, temperature=0.7)
+llm = AzureChatOpenAI(azure_endpoint=endpoint, api_key=api_key, api_version=api_version, azure_deployment=gpt_model, temperature=0.7, 
+                      streaming=True)
 contextualize_q_system_prompt = """Given a chat history and the latest user question \
 which might reference context in the chat history, formulate a standalone question \
 which can be understood without the chat history. Do NOT answer the question, \
@@ -81,33 +81,52 @@ retrieval_chain = create_retrieval_chain(retriever=history_aware_retriever, comb
 chat_history = []
 count = 0
 while True:
-    # Collect user prompt
-    query = input("\nYou: ")
+    '''  
+    To modify the response output:  
+    - For streaming: set the method on line 95 to '.stream', uncomment lines 95-105, and comment out lines 108-123.  
+    - For no streaming: set the method on line 95 to '.invoke', uncomment lines 108-123, and comment out lines 95-105.  
+    '''
+
+    query = input("\n**You**: ")
     time_asked = get_time()
-    # Execute the retrieval chain on question
-    chain = retrieval_chain.invoke({"input": query, "chat_history": chat_history})
-    chat_history.extend([HumanMessage(content=query), chain["answer"]])
-    # Initialize object that holds sources in the returned dictionary
-    sources = [] 
-    page_contents = []
-    search_scores = []
-    # print(chain)
-    for doc in chain['context']:
-        source = doc.metadata['metadata']
-        page_content = doc.page_content
-        search_score = doc.metadata['@search.score']
-        # print(type(search_score))
-        sources.append(source)
-        page_contents.append(page_content)
-        search_scores.append(search_score)
-    # Print out LLM answer and sources. 
-    print(f"\nAnswer: {chain['answer']}")
-    source = "".join(sources)
-    print(f"\nSource: {source}\n\n")
-    page_content = "".join(page_contents) 
-    search_score = search_scores[0]
+    chain = retrieval_chain.stream({"input": query, "chat_history": chat_history})  # change method to .invoke for no stream 
+
+    # Code for streaming ai response
+    print("\n**GPT Response**: \n")
+    for event in chain:
+        if answer_chunk := event.get("answer"):
+            print(answer_chunk, end="")
+            ai_response = answer_chunk
+        if context_chunk := event.get("context"):
+            for i in context_chunk:
+                search_score = i.metadata.get('@search.score')  
+                source = i.metadata.get('metadata')  
+                page_content = i.page_content  
+    print(f"\n\n{'-'*100}\n*Source*: {source}\n{'-'*100}")  
+    
+    # Code for no streaming ai response
+    # sources = [] 
+    # page_contents = []
+    # search_scores = []
+    # for doc in chain['context']:
+    #     source = doc.metadata['metadata']
+    #     page_content = doc.page_content
+    #     search_score = doc.metadata['@search.score']
+    #     sources.append(source)
+    #     page_contents.append(page_content)
+    #     search_scores.append(search_score)
+    # ai_response = chain['answer']
+    # print(f"\nAnswer: {ai_response}")
+    # source = "".join(sources)
+    # print(f"\nSource: {source}\n\n")
+    # page_content = "".join(page_contents) 
+    # search_score = search_scores[0]
+
+    # Append response to chat history and page_content to qa_system_prompt
+    chat_history.extend([HumanMessage(content=query), ai_response])
     system_prompt = qa_system_prompt.replace("{context}", page_content)
-    # Call MySQL API to capture metadata (make sure api is running locally)
+
+    # Call Code API to capture metadata
     url = "https://code-api.azurewebsites.net/code_api"  
     
     # The following data must be sent as payload with each API request.
@@ -115,7 +134,7 @@ while True:
         "system_prompt": f"{system_prompt}\n\n{contextualize_q_system_prompt}\n{str(chat_history)}",  # All system prompts used including retrieved docs and any memory
         "user_prompt": query,  # User prompt in which the end-user asks the model. 
         "time_asked": time_asked, # Time in which the user prompt was asked.
-        "response": chain['answer'],  # Model's answer to the user prompt
+        "response": ai_response,  # Model's answer to the user prompt
         "search_score": search_score, # Score for retrieved docs
         "deployment_model": f'{gpt_model}, {ada_model}', # Input your model deployment names here
         "name_model": "gpt-4o, text-embedding-ada-002",  # Input your models here

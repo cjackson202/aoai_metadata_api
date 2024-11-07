@@ -4,8 +4,8 @@ This README provides a detailed comparison between `apim_api` and `code_api`, he
   
 ## Overview  
   
-- **`code_api`**: Offers greater flexibility in the data you can pass to your Metadata API as payload, allowing for the tracking of both native Azure OpenAI metrics and external metrics.  
-- **`apim_api`**: Provides optimal automation for capturing and storing Azure OpenAI metrics with extra security, reducing the development overhead.  
+- **`code_api`**: Offers greater flexibility in the data you can pass to your Metadata API as payload, allowing for the tracking of both native Azure OpenAI metrics and external metrics. ***This API supports Azure OpenAI streaming for the AI response.*** 
+- **`apim_api`**: Provides optimal automation for capturing and storing Azure OpenAI metrics with extra security, reducing the development overhead. ***This API does not support Azure OpenAI streaming for AI response***, since the API expects the full response body to submit metadata to either a cosmos or mysql database. Other forms of streaming can be implemented that are not Azure OpenAI native.  
   
 ## Key Considerations  
   
