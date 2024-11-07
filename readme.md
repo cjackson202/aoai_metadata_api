@@ -1,6 +1,6 @@
-# Azure OpenAI MySQL/Cosmos API
+# Azure OpenAI Metadata API
 
-This repository offers a complete solution to capturing essential metadata from Azure OpenAI API calls. 
+This repository provides a comprehensive solution for capturing and storing essential metadata from Azure OpenAI API calls. It supports integration with both **MySQL** and **Cosmos** databases, ensuring flexibility and scalability for your data management needs.
 
 ## API's 
 [Choosing an API](api/readme.md)
@@ -56,7 +56,7 @@ pip install -r requirements.txt
   
 ### 1. Store API Secrets Securely  
 - **Environment Variables**: Always store your API secrets in environment variables, typically in a `.env` file. This isolates sensitive information from your codebase, reducing the risk of accidental exposure. Environment variables can be configured and stored in Azure App Service once deployed. 
-- **Version Control**: By default, the `.env` file for storing secrets have been added to `.gitignore`, preventing thos file from being tracked by version control systems like Git.  
+- **Version Control**: By default, the `.env` file for storing secrets have been added to `.gitignore`, preventing those file from being tracked by version control systems like Git.  
 - **Access Control**: Restrict access to the environment variables to only those who need it. Use role-based access controls (RBAC) to enforce this.  
   
 ### 2. Network Restrictions  
