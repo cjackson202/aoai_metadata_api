@@ -66,7 +66,7 @@ Note: If you build the API from the docker file provided, you must switch to run
 ```sh  
     docker run -p 8000:80 --env-file ./docker_env/.env apim_api:v1  
 ```  
-Docker build command **apim_api**: `docker build -f api/code_api/Dockerfile -t apim_api:v1 .` 
+Docker build command **apim_api**: `docker build -f api/apim_api/Dockerfile -t apim_api:v1 .` 
 
 4. **Run the python script from the terminal:**  
 ```sh  

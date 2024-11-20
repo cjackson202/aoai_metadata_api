@@ -67,7 +67,7 @@ while True:
                         temperature=0.7,
                         default_headers={
             'Content-Type': 'application/json',
-            "system_prompt": f'',  # Leave empty string.
+            "system_prompt": '',  # Leave empty string.
             "user_prompt": query.strip(),  # User prompt in which the end-user asks the model. (strip any leading or trailing whitespace)
             "time_asked": time_asked,  # Time in which the user prompt was asked.
             "deployment_model": f"{gpt_model}, {ada_model}",  # Input your model's deployment name here

@@ -15,3 +15,5 @@ api/apim_api/__pycache__/apim_api.cpython-311.pyc
 api/code_api/backend_diagrams/flow_chart_codeapi.drawio
 api/apim_api/backend_diagrams/flow_chart_apimapi.drawio
 aoai_metadata_pres.pptx
+api/apim_api/api_testers/dev_norag.py
+api/apim_api/my_apim_api.py

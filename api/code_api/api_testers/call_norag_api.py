@@ -14,6 +14,9 @@ import os
 from openai import AzureOpenAI
 from datetime import datetime, timezone
 import sseclient
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_time():
     # Capture the current date and time in UTC (MySQL Native timezone)

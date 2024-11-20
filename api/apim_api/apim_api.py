@@ -1,15 +1,17 @@
 '''
-UPDATES:
-    - Querying with RAG added to the api via retreieve header (please see /api_testers/call_apim_query.py)
-    - Resquest body now captured in API, in addition to response body.
-        - APIM policy updated to send request and response as payload to this api.
-    - Prompts and token counts are captured from the response body. (Please see updated headers for each script in /api_testers)
+UPDATES:  
+    - The API has been updated to no longer require a specific project name to capture metadata from the response body.  
+        This affects the logic between lines 370 and 398.  
+    - The new implementation uses a try/except block to handle the metadata extraction, making the process more flexible  
+        without the need for an explicitly provided project name.  
+    - Note: The project name is still verified within the `aoai_metadata()` function to determine the correct method   
+        for capturing token pricing.  
 
 Execution:
 - To run this api locally use: uvicorn apim_api:app --reload
 - To run this api in APIM, see run_with_ngrok.py (preffered for APIM policy to work)
 
-Last update: 10/02/2024
+Last update: 11/20/2024
 '''
 
 from fastapi import FastAPI, Request, HTTPException  
@@ -369,30 +371,35 @@ async def process_data(request: Request):
         retrieve = True
     url = str(request.url)
 
-    if project == "Disney Character (API Test)":
-        ai_response = response_body['choices'][0]['message']["content"]
-        user_prompt = request_body['messages'][1]['content']
-        system_prompt = request_body['messages'][0]['content']
-        prompt_tokens = response_body['usage']['prompt_tokens']  
-        response_tokens =  response_body['usage']['completion_tokens'] 
-    elif project == "Embeddings Index (API Test)":
-        ai_response = response_body['data'][0]['embedding']
-        system_prompt = headers.get('system_prompt', 'Header not found')  
-        user_prompt = headers.get('user_prompt', 'Header not found')  
-        prompt_tokens = response_body['usage']['prompt_tokens'] 
-        response_tokens = 0
-    elif project == "Retriever (API Test)":  
-        ai_response = response_body['choices'][0]['message']["content"]
-        # Determine the total number of messages  
-        num_messages = len(request_body['messages'])  
-        # if num_messages >= 2:  
-        #     user_prompt = request_body['messages'][num_messages - 1]['content']  
-        user_prompt = headers.get('user_prompt', 'Header not found') 
+    try:  
+        ai_response = response_body['choices'][0]['message']["content"]  
+        user_prompt = request_body['messages'][1]['content']  
         system_prompt = request_body['messages'][0]['content']  
         prompt_tokens = response_body['usage']['prompt_tokens']  
-        response_tokens =  response_body['usage']['completion_tokens']  
-    else:
-        "Project not found."
+        response_tokens = response_body['usage']['completion_tokens']  
+    except (KeyError, IndexError):  
+        print("Failed to process as chat completion response.")  
+        try:  
+            print(response_body)  
+            ai_response = response_body['data'][0]['embedding']  
+            system_prompt = headers.get('system_prompt', 'Header not found')  
+            user_prompt = headers.get('user_prompt', 'Header not found')  
+            prompt_tokens = response_body['usage']['prompt_tokens']  
+            response_tokens = 0  
+        except (KeyError, IndexError):  
+            print("Failed to process as rag index response.")  
+            try:  
+                ai_response = response_body['choices'][0]['message']["content"]  
+                # Determine the total number of messages  
+                num_messages = len(request_body['messages'])  
+                # if num_messages >= 2:  
+                #     user_prompt = request_body['messages'][num_messages - 1]['content']  
+                user_prompt = headers.get('user_prompt', 'Header not found')  
+                system_prompt = request_body['messages'][0]['content']  
+                prompt_tokens = response_body['usage']['prompt_tokens']  
+                response_tokens = response_body['usage']['completion_tokens']  
+            except (KeyError, IndexError):  
+                print("Failed to process as rag query response.")  
 
     prompt_token_count, prompt_cost, response_token_count, completion_cost = aoai_metadata(  
         system_prompt=system_prompt,  
