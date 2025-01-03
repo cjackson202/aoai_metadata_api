@@ -1,12 +1,12 @@
 '''
 UPDATES:
-    - Added if checks for Embeddings Index (API Test) project (lines 234 and 273) to explicity set response tokens to 0
-    - Modified the requested user prompt for Embeddings Index (API Test) ONLY to remove sources in string for token and cost processing
-        - Caused inconsistencies in token count for user prompt 
+    - Added user prompt and response token counts as request data for API, as this will now come from client side. 
+        - If client doesn't pass these values, API logic will still attempt to calculate the token count. 
+    - aoai_metadata() no longer checks for specific projects, will check if user prompt tokens and response tokens are None. 
 
 To run this api locally use: uvicorn code_api:app --reload
 
-Last update: 10/15/2024
+Last update: 01/03/2025
 '''
 
 from fastapi import FastAPI, HTTPException  
@@ -26,8 +26,10 @@ app = FastAPI()
 class RequestData(BaseModel):  
     system_prompt: str  = Field(default="")  
     user_prompt: str  = Field(default="")  
+    user_prompt_tokens: int = Field(default=None)
     time_asked: str  = Field(default="")  
     response: str  = Field(default="")  
+    response_tokens: int = Field(default=None)
     search_score: float = Field(default=None)
     deployment_model: str = Field(default="")  
     name_model: str = Field(default="")  
@@ -38,7 +40,7 @@ class RequestData(BaseModel):
     retrieve: bool = Field(default=False)
     database: str = Field(default="")
   
-def aoai_metadata(system_prompt, user_prompt, response, name_model, version_model, region, retrieve):  
+def aoai_metadata(system_prompt, user_prompt, response, name_model, version_model, region, retrieve, project, prompt_tokens, res_tokens):  
     def token_amount(text, name_model):  
         if name_model in ['gpt-4o', 'gpt-4o-', 'gpt-4o-mini']:  
             encoding = tiktoken.get_encoding('o200k_base')  
@@ -48,8 +50,12 @@ def aoai_metadata(system_prompt, user_prompt, response, name_model, version_mode
             return len(encoding.encode(text)) 
         return 0   
     if retrieve == False:
-        prompt_token_count = token_amount(text=system_prompt, name_model=name_model) + token_amount(text=user_prompt, name_model=name_model) + 11
-        response_token_count = token_amount(text=response, name_model=name_model) 
+        if prompt_tokens and res_tokens is not None:
+            prompt_token_count = prompt_tokens
+            response_token_count = res_tokens
+        else:
+            prompt_token_count = token_amount(text=system_prompt, name_model=name_model) + token_amount(text=user_prompt, name_model=name_model) + 11
+            response_token_count = token_amount(text=response, name_model=name_model) 
         if region in ['East US', 'East US 2']:  
             # Pricing gpt-4o - 2024-05-13  
             if name_model == 'gpt-4o' and version_model == '2024-05-13':  
@@ -81,9 +87,13 @@ def aoai_metadata(system_prompt, user_prompt, response, name_model, version_mode
         split_models = [s.strip() for s in split_models] 
         gpt_model = split_models[0]  
         ada_model = split_models[1]  
-        prompt_token_count = token_amount(text=system_prompt, name_model=gpt_model) + token_amount(text=user_prompt, name_model=gpt_model) + 11
+        if prompt_tokens and res_tokens is not None:
+            prompt_token_count = prompt_tokens
+            response_token_count = res_tokens
+        else:
+            prompt_token_count = token_amount(text=system_prompt, name_model=gpt_model) + token_amount(text=user_prompt, name_model=gpt_model) + 11
+            response_token_count = token_amount(text=response, name_model=gpt_model) 
         user_prompt_token_count_embeddings = token_amount(text=user_prompt, name_model=ada_model) 
-        response_token_count = token_amount(text=response, name_model=gpt_model) 
         if region in ['East US', 'East US 2']:
             # Pricing gpt-4o (2024-05-13) and text-embedding-ada-002 (2)
             if gpt_model == 'gpt-4o' and ada_model == 'text-embedding-ada-002' and version_model == '2024-05-13, 2':
@@ -357,6 +367,9 @@ def process_data(data: RequestData):
         version_model=data.version_model,  
         region=data.region, 
         retrieve=data.retrieve,  
+        project=data.project,
+        prompt_tokens=data.user_prompt_tokens, 
+        res_tokens=data.response_tokens
         )  
     else:
         prompt_token_count, prompt_cost, response_token_count, completion_cost = aoai_metadata(  
@@ -367,6 +380,9 @@ def process_data(data: RequestData):
         version_model=data.version_model,  
         region=data.region, 
         retrieve=data.retrieve,  
+        project=data.project,
+        prompt_tokens=data.user_prompt_tokens, 
+        res_tokens=data.response_tokens
         )  
   
     result = main(  

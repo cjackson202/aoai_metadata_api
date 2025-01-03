@@ -72,9 +72,13 @@ Note - The following data should be passed as payload to the API:
 
             "user_prompt": "",  # User prompt in which the end-user asks the model. 
 
+            "user_prompt_tokens": None, # Token count for user prompt & system prompt in which the end-user asks the model. Keep `None` value for API to calculate token count.
+
             "time_asked": "", # Time in which the user prompt was asked.
 
             "response": "",  # Model's answer to the user prompt
+
+            "response_tokens" None, # Token count for model's answer to the user prompt. Keep `None` value for API to calculate token count.
 
             "search_score": None, # Search score returned from retrieved docs in Azure AI Search index
 
