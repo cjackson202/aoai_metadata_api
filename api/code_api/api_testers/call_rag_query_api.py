@@ -3,9 +3,9 @@ This script is designed to test the MySQL API using eligible GPT and ADA models 
 for RAG scenarios, where embeddings for queries are generated and documents are retrieved from Azure AI Search.
 
 Update:
-- Streaming option now added to ai_response (see lines 84-88 on how to use streaming)
+- Fixed ai_response for streaming option, where the full response was not passed to API as payload.
 
-Updated 11/7/24
+Updated 01/03/25
 '''
 
 import os
@@ -83,8 +83,8 @@ count = 0
 while True:
     '''  
     To modify the response output:  
-    - For streaming: set the method on line 95 to '.stream', uncomment lines 95-105, and comment out lines 108-123.  
-    - For no streaming: set the method on line 95 to '.invoke', uncomment lines 108-123, and comment out lines 95-105.  
+    - For streaming: set the method on line 92 to '.stream', uncomment lines 95-107, and comment out lines 110-125.  
+    - For no streaming: set the method on line 92 to '.invoke', uncomment lines 110-125, and comment out lines 95-107.  
     '''
 
     query = input("\n**You**: ")
@@ -92,11 +92,13 @@ while True:
     chain = retrieval_chain.stream({"input": query, "chat_history": chat_history})  # change method to .invoke for no stream 
 
     # Code for streaming ai response
+    final_ai_response = ""
     print("\n**GPT Response**: \n")
     for event in chain:
         if answer_chunk := event.get("answer"):
             print(answer_chunk, end="")
             ai_response = answer_chunk
+            final_ai_response += ai_response
         if context_chunk := event.get("context"):
             for i in context_chunk:
                 search_score = i.metadata.get('@search.score')  
@@ -134,7 +136,7 @@ while True:
         "system_prompt": f"{system_prompt}\n\n{contextualize_q_system_prompt}\n{str(chat_history)}",  # All system prompts used including retrieved docs and any memory
         "user_prompt": query,  # User prompt in which the end-user asks the model. 
         "time_asked": time_asked, # Time in which the user prompt was asked.
-        "response": ai_response,  # Model's answer to the user prompt
+        "response": final_ai_response,  # Model's answer to the user prompt
         "search_score": search_score, # Score for retrieved docs
         "deployment_model": f'{gpt_model}, {ada_model}', # Input your model deployment names here
         "name_model": "gpt-4o, text-embedding-ada-002",  # Input your models here

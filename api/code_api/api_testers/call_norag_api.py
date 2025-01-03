@@ -3,9 +3,9 @@ This script is designed to test the MySQL API using eligible GPT models specific
 where Retrieval-Augmented Generation (RAG) is not needed.
 
 Update:
-- Streaming option now added to ai_response (see lines 26-30 on how to use streaming)
+- User prompt and response tokens are now passed to code-api as payload. (Can still pass None and these values will be calculated by API)
 
-Updated 11/7/24
+Updated 01/03/25
 '''
 
 import requests  
@@ -28,8 +28,8 @@ def get_time():
 while True:
     '''  
     To modify the response output:  
-    - For streaming: set stream=True on line 50, uncomment lines 53-56, and comment out lines 58-60.  
-    - For no streaming: set stream=False on line 50, uncomment lines 58-60, and comment out lines 53-56.  
+    - For streaming: set stream=True on line 53, uncomment lines 56-59, and comment out lines 61-63.  
+    - For no streaming: set stream=False on line 53, uncomment lines 61-63, and comment out lines 56-59.  
     '''
     # Make AOAI request
     api_key = os.getenv("OPENAI_API_KEY")
@@ -70,8 +70,10 @@ while True:
     data = {  
         "system_prompt": system_prompt,  # System prompt given to the AOAI model.
         "user_prompt": user_prompt,  # User prompt in which the end-user asks the model. 
+        "user_prompt_tokens": ai_response_dict['usage']['prompt_tokens'],
         "time_asked": time_asked, # Time in which the user prompt was asked.
         "response": ai_response,  # Model's answer to the user prompt
+        "response_tokens": ai_response_dict['usage']['completion_tokens'],
         "deployment_model": deployment_name, # Input your model's deployment name here
         "name_model": "gpt-4o",  # Input you model here
         "version_model": "2024-05-13",  # Input your model version here. NOT API VERSION.
