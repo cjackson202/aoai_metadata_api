@@ -1,8 +1,8 @@
 '''
 UPDATES:
-    - Added user prompt and response token counts as request data for API, as this will now come from client side. 
-        - If client doesn't pass these values, API logic will still attempt to calculate the token count. 
-    - aoai_metadata() no longer checks for specific projects, will check if user prompt tokens and response tokens are None. 
+    - Added active users to the mysqldb or cosmosdb. 
+        - If using Entra ID as identity service, this can be achieved via the 'X-MS-CLIENT-PRINCIPAL-ID' header, 
+            which will give the object id for a user in the Entra tenant.
 
 To run this api locally use: uvicorn code_api:app --reload
 
@@ -24,7 +24,8 @@ load_dotenv()
 app = FastAPI()  
   
 class RequestData(BaseModel):  
-    system_prompt: str  = Field(default="")  
+    system_prompt: str  = Field(default="") 
+    current_user: str = Field(default="") 
     user_prompt: str  = Field(default="")  
     user_prompt_tokens: int = Field(default=None)
     time_asked: str  = Field(default="")  
@@ -118,8 +119,8 @@ def aoai_metadata(system_prompt, user_prompt, response, name_model, version_mode
             raise HTTPException(status_code=400, detail="East US & East US 2 regions only available.")  
 
 # function for inserting data to MySQL database 
-def sql_connect(system_prompt, user_prompt, time_asked, prompt_cost, response, search_score, completion_cost, name_model, version_model, 
-                deployment_model, prompt_token_count, response_token_count, project, api_name):  
+def sql_connect(system_prompt, user_prompt, time_asked, prompt_cost, response, search_score, completion_cost, name_model, version_model,  
+                deployment_model, prompt_token_count, response_token_count, project, api_name, entra_object_id):  
     try:  
         # Establish a connection to the MySQL server  
         mydb = mysql.connector.connect(  
@@ -132,7 +133,17 @@ def sql_connect(system_prompt, user_prompt, time_asked, prompt_cost, response, s
         # Define a cursor object  
         mycursor = mydb.cursor()  
   
-        # Check if system_prompt already exists in the aoaisystm table  
+        # Check if the entra_object_id exists in the users table  
+        query = "SELECT entra_object_id FROM users WHERE entra_object_id = %s"  
+        mycursor.execute(query, (entra_object_id,))  
+        user_result = mycursor.fetchone()  
+        if user_result is None:  
+            # Insert the entra_object_id into the users table  
+            insert_user_query = "INSERT INTO users (entra_object_id) VALUES (%s)"  
+            mycursor.execute(insert_user_query, (entra_object_id,))  
+            print(f"User {entra_object_id} added to users table.")  
+  
+        # Check if system_prompt already exists in the aoaisystem table  
         mycursor.execute("SELECT system_id FROM aoaisystem WHERE system_prompt = %s", (system_prompt,))  
         result = mycursor.fetchone()  
   
@@ -140,7 +151,7 @@ def sql_connect(system_prompt, user_prompt, time_asked, prompt_cost, response, s
         if result:  
             system_id = result[0]  
         else:  
-            # Insert a new system_prompt into the aoaisystm table  
+            # Insert a new system_prompt into the aoaisystem table  
             print("Warning: System_id not found for this prompt. Creating new id and adding prompt!")  
             mycursor.execute("SELECT MAX(prompt_number) FROM aoaisystem")  
             result = mycursor.fetchone()  
@@ -152,8 +163,8 @@ def sql_connect(system_prompt, user_prompt, time_asked, prompt_cost, response, s
             system_id = mycursor.lastrowid  # Get the ID of the last inserted row  
   
         # Insert into prompt table with connection to system prompt  
-        sql = "INSERT INTO prompt (system_id, user_prompt, tokens, price, timestamp) VALUES (%s, %s, %s, %s, %s)"  
-        val = (system_id, user_prompt, prompt_token_count, prompt_cost, time_asked)  
+        sql = "INSERT INTO prompt (system_id, user_prompt, tokens, price, timestamp, entra_object_id) VALUES (%s, %s, %s, %s, %s, %s)"  
+        val = (system_id, user_prompt, prompt_token_count, prompt_cost, time_asked, entra_object_id)  
         mycursor.execute(sql, val)  
         prompt_id = mycursor.lastrowid  
   
@@ -186,55 +197,53 @@ def sql_connect(system_prompt, user_prompt, time_asked, prompt_cost, response, s
             # Define regex patterns for models  
             ada_pattern = re.compile(r'(?i)ada')  # Case insensitive match for 'ada' anywhere in the string  
             gpt4o_pattern = re.compile(r'(?i)gpt-?4o')  # Case insensitive match for 'gpt-4o' or 'gpt4o' anywhere in the string  
-
-            # ADA model only insert to MySQL
-            if name_model == 'text-embedding-ada-002' and version_model == '2':  # Insert for ada-002 (2)
+  
+            # ADA model only insert to MySQL  
+            if name_model == 'text-embedding-ada-002' and version_model == '2':  # Insert for ada-002 (2)  
                 sql = "INSERT INTO models (model, prompt_price, completion_price, tiktoken_encoding) VALUES (%s, %s, %s, %s)"  
                 val = (deployment_model, None, 0.000100, 'cl100k_base')  
                 mycursor.execute(sql, val)  
-                model_id = mycursor.lastrowid 
-
-            # GPT model only inserts to MySQL
-            elif name_model == 'gpt-4o' and version_model == '2024-05-13': # Insert for gpt-4o (turbo-2024-05-13)
+                model_id = mycursor.lastrowid  
+            # GPT model only inserts to MySQL  
+            elif name_model == 'gpt-4o' and version_model == '2024-05-13':  # Insert for gpt-4o (turbo-2024-05-13)  
                 sql = "INSERT INTO models (model, prompt_price, completion_price, tiktoken_encoding) VALUES (%s, %s, %s, %s)"  
                 val = (deployment_model, .005000, 0.015000, 'o200k_base')  
                 mycursor.execute(sql, val)  
                 model_id = mycursor.lastrowid  
-            elif name_model == 'gpt-4o' and version_model == '2024-08-06': # Insert for gpt-4o (turbo-2024-08-06)
+            elif name_model == 'gpt-4o' and version_model == '2024-08-06':  # Insert for gpt-4o (turbo-2024-08-06)  
                 sql = "INSERT INTO models (model, prompt_price, completion_price, tiktoken_encoding) VALUES (%s, %s, %s, %s)"  
                 val = (deployment_model, .0027500, 0.011000, 'o200k_base')  
                 mycursor.execute(sql, val)  
-                model_id = mycursor.lastrowid 
-            elif name_model == 'gpt-4o-mini' and version_model == '2024-07-18': # Insert for gpt-4o-mini (2024-07-18)
+                model_id = mycursor.lastrowid  
+            elif name_model == 'gpt-4o-mini' and version_model == '2024-07-18':  # Insert for gpt-4o-mini (2024-07-18)  
                 sql = "INSERT INTO models (model, prompt_price, completion_price, tiktoken_encoding) VALUES (%s, %s, %s, %s)"  
                 val = (deployment_model, .000165, 0.000660, 'o200k_base')  
                 mycursor.execute(sql, val)  
-                model_id = mycursor.lastrowid 
-            elif name_model == 'gpt-4' and version_model == 'turbo-2024-04-09': # Insert for gpt-4 (turbo-2024-04-09)
+                model_id = mycursor.lastrowid  
+            elif name_model == 'gpt-4' and version_model == 'turbo-2024-04-09':  # Insert for gpt-4 (turbo-2024-04-09)  
                 sql = "INSERT INTO models (model, prompt_price, completion_price, tiktoken_encoding) VALUES (%s, %s, %s, %s)"  
                 val = (deployment_model, 0.0, 0.0, 'cl100k_base')  
                 mycursor.execute(sql, val)  
-                model_id = mycursor.lastrowid
-
-            # GPT & ADA model inserts to MySQL
-            elif name_model == 'gpt-4o, text-embedding-ada-002' and version_model == "2024-05-13, 2": # Insert for gpt-4o (2024-05-13) + ada-002 (2)
+                model_id = mycursor.lastrowid  
+            # GPT & ADA model inserts to MySQL  
+            elif name_model == 'gpt-4o, text-embedding-ada-002' and version_model == "2024-05-13, 2":  # Insert for gpt-4o (2024-05-13) + ada-002 (2)  
                 sql = "INSERT INTO models (model, prompt_price, completion_price, tiktoken_encoding) VALUES (%s, %s, %s, %s)"  
-                val = (deployment_model, .005+.0001, 0.015000, 'o200k_base, cl100k_base')  # prompt_price = prompt_price <text..ada-002> + prompt_price <gpt-4o>
+                val = (deployment_model, .005 + .0001, 0.015000, 'o200k_base, cl100k_base')  # prompt_price = prompt_price <text..ada-002> + prompt_price <gpt-4o>  
                 mycursor.execute(sql, val)  
                 model_id = mycursor.lastrowid  
-            elif name_model == 'gpt-4o, text-embedding-ada-002' and version_model == "2024-08-06, 2": # Insert for gpt-4o (2024-08-06) + ada-002 (2)
+            elif name_model == 'gpt-4o, text-embedding-ada-002' and version_model == "2024-08-06, 2":  # Insert for gpt-4o (2024-08-06) + ada-002 (2)  
                 sql = "INSERT INTO models (model, prompt_price, completion_price, tiktoken_encoding) VALUES (%s, %s, %s, %s)"  
-                val = (deployment_model, .00275+.0001, 0.011, 'o200k_base, cl100k_base')  # prompt_price = prompt_price <text..ada-002> + prompt_price <gpt-4o>
+                val = (deployment_model, .00275 + .0001, 0.011, 'o200k_base, cl100k_base')  # prompt_price = prompt_price <text..ada-002> + prompt_price <gpt-4o>  
                 mycursor.execute(sql, val)  
                 model_id = mycursor.lastrowid  
-            elif name_model == 'gpt-4o-mini, text-embedding-ada-002' and version_model == "2024-07-18, 2": # Insert for gpt-4o-mini (2024-07-18) + ada-002 (2)
+            elif name_model == 'gpt-4o-mini, text-embedding-ada-002' and version_model == "2024-07-18, 2":  # Insert for gpt-4o-mini (2024-07-18) + ada-002 (2)  
                 sql = "INSERT INTO models (model, prompt_price, completion_price, tiktoken_encoding) VALUES (%s, %s, %s, %s)"  
-                val = (deployment_model, .000165+.0001, 0.00066, 'o200k_base, cl100k_base')  # prompt_price = prompt_price <text..ada-002> + prompt_price <gpt-4o>
+                val = (deployment_model, .000165 + .0001, 0.00066, 'o200k_base, cl100k_base')  # prompt_price = prompt_price <text..ada-002> + prompt_price <gpt-4o>  
                 mycursor.execute(sql, val)  
                 model_id = mycursor.lastrowid  
-            elif name_model == 'gpt-4, text-embedding-ada-002' and version_model == "turbo-2024-04-09, 2": # Insert for gpt-4 (turbo-2024-04-09) + ada-002 (2)
+            elif name_model == 'gpt-4, text-embedding-ada-002' and version_model == "turbo-2024-04-09, 2":  # Insert for gpt-4 (turbo-2024-04-09) + ada-002 (2)  
                 sql = "INSERT INTO models (model, prompt_price, completion_price, tiktoken_encoding) VALUES (%s, %s, %s, %s)"  
-                val = (deployment_model, 0.0+.0001, 0.0, 'o200k_base, cl100k_base')  # prompt_price = prompt_price <text..ada-002> + prompt_price <gpt-4o>
+                val = (deployment_model, 0.0 + .0001, 0.0, 'o200k_base, cl100k_base')  # prompt_price = prompt_price <text..ada-002> + prompt_price <gpt-4o>  
                 mycursor.execute(sql, val)  
                 model_id = mycursor.lastrowid  
             else:  
@@ -244,8 +253,8 @@ def sql_connect(system_prompt, user_prompt, time_asked, prompt_cost, response, s
                 model_id = mycursor.lastrowid  
   
         # Insert into chat_completions table based on model used  
-        if project == "Embeddings Index (API Test)":    # Indexing project will have zero response token count, as tokens are only handled in prompt. 
-            response_token_count = 0
+        if project == "Embeddings Index (API Test)":  # Indexing project will have zero response token count, as tokens are only handled in prompt.  
+            response_token_count = 0  
         sql = "INSERT INTO chat_completions (model_id, prompt_id, api_id, chat_completion, tokens, price, search_score) VALUES (%s, %s, %s, %s, %s, %s, %s)"  
         val = (model_id, prompt_id, api_id, response, response_token_count, completion_cost, search_score)  
         mycursor.execute(sql, val)  
@@ -253,12 +262,13 @@ def sql_connect(system_prompt, user_prompt, time_asked, prompt_cost, response, s
         # Save the changes  
         mydb.commit()  
         return {"message": f"{mycursor.rowcount} record(s) inserted into {os.getenv('azure_mysql_schema')} database."}  
+  
     except Exception as e:  
-        raise HTTPException(status_code=500, detail=f"Failed to access MySQL DB with error: {e}")  
+        raise HTTPException(status_code=500, detail=f"Failed to access MySQL DB with error: {e}")    
 
 # function for inserting into cosmos database 
 def cosmosdb_connect(system_prompt, user_prompt, time_asked, prompt_cost, response, search_score, completion_cost, 
-                deployment_model, prompt_token_count, response_token_count, project, api_name, version_model):
+                deployment_model, prompt_token_count, response_token_count, project, api_name, version_model, entra_object_id):
     # Initialize Cosmos env variables 
     endpoint = os.getenv("azure_cosmosdb_endpoint")  
     key = os.getenv("azure_cosmosdb_key")            
@@ -318,6 +328,7 @@ def cosmosdb_connect(system_prompt, user_prompt, time_asked, prompt_cost, respon
         "id": str(new_id),  # Incremented ID  
         "Project": project,  
         "System_prompt": system_prompt,  
+        "Active_user": entra_object_id,
         "User_prompt": user_prompt,  
         "Prompt_tokens": prompt_token_count,  
         "Prompt_price": prompt_cost,
@@ -339,16 +350,16 @@ def cosmosdb_connect(system_prompt, user_prompt, time_asked, prompt_cost, respon
     except exceptions.CosmosHttpResponseError as e:  
         return f"An error occurred: {e.message}"
   
-def main(system_prompt, user_prompt, time_asked, prompt_cost, response, search_score, completion_cost, name_model, version_model, deployment_model, prompt_token_count, 
+def main(system_prompt, current_user, user_prompt, time_asked, prompt_cost, response, search_score, completion_cost, name_model, version_model, deployment_model, prompt_token_count, 
          response_token_count, project, api_name, database):  
     if database == "mysqldb":
         return sql_connect(system_prompt=system_prompt, user_prompt=user_prompt, time_asked=time_asked, prompt_cost=prompt_cost, response=response, search_score=search_score,
                             completion_cost=completion_cost, name_model=name_model, version_model=version_model, deployment_model=deployment_model, 
-                            prompt_token_count=prompt_token_count, response_token_count=response_token_count, project=project, api_name=api_name) 
+                            prompt_token_count=prompt_token_count, response_token_count=response_token_count, project=project, api_name=api_name, entra_object_id=current_user) 
     elif database == "cosmosdb":
         return cosmosdb_connect(system_prompt=system_prompt, user_prompt=user_prompt, time_asked=time_asked, prompt_cost=prompt_cost, 
                                 response=response, search_score=search_score, completion_cost=completion_cost, deployment_model=deployment_model, prompt_token_count=prompt_token_count, 
-                                response_token_count=response_token_count, project=project, api_name=api_name, version_model=version_model)
+                                response_token_count=response_token_count, project=project, api_name=api_name, version_model=version_model, entra_object_id=current_user)
     else:
         return "Database must be mysqldb or cosmosdb. Please specifiy one these values."
  
@@ -387,6 +398,7 @@ def process_data(data: RequestData):
   
     result = main(  
         system_prompt=data.system_prompt,  
+        current_user=data.current_user,
         user_prompt=data.user_prompt,  
         time_asked=data.time_asked,  
         prompt_cost=prompt_cost,  

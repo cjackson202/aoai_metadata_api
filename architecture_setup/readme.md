@@ -33,11 +33,12 @@ Use the MySQl Installer to download MySQL Workbench. MySQL Workbench is a unifie
         ```
 3. [Connect Flexible Server to MySQL Workbench](https://learn.microsoft.com/en-us/azure/mysql/flexible-server/connect-workbench): Please click the URL to be directed to Microsoft Learn documentation on connecting the server to Workbench. 
 
-4. [Create aoai_api Schema in MySQL Server](aoai_api_v2.sql) : To create the scehma for the aoai api database, please follow these steps:
+4. [Create aoai_api Schema in MySQL Server](./mysql/aoai_api_v3.sql) : To create the scehma for the aoai api database, please follow these steps:
+    **Note: To learn more about the MySQL schema, please [refer here](./mysql/readme.md)**.
 
     1. In the top left menu bar, select **File**. 
     2. From the dropdown menu, select **Open SQL Script**.
-    3. Download the `aoai_api_v2.sql` MySQL schema script from [here](mysql/aoai_api_v2.sql).
+    3. Download the `aoai_api_v3.sql` MySQL schema script from [here](mysql/aoai_api_v3.sql).
     4. Click the lighting bolt icon, without cursor icon, to execute the script. 
     5. At this point, the schema `aoai_api` should be created in your server. 
 

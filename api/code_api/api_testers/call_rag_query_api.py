@@ -3,9 +3,9 @@ This script is designed to test the MySQL API using eligible GPT and ADA models 
 for RAG scenarios, where embeddings for queries are generated and documents are retrieved from Azure AI Search.
 
 Update:
-- Fixed ai_response for streaming option, where the full response was not passed to API as payload.
+- User data from Entra ID now passed to api via the "current_user" param. 
 
-Updated 01/03/25
+Updated 01/06/25
 '''
 
 import os
@@ -134,6 +134,7 @@ while True:
     # The following data must be sent as payload with each API request.
     data = {  
         "system_prompt": f"{system_prompt}\n\n{contextualize_q_system_prompt}\n{str(chat_history)}",  # All system prompts used including retrieved docs and any memory
+        "current_user": "RAG Test User",
         "user_prompt": query,  # User prompt in which the end-user asks the model. 
         "time_asked": time_asked, # Time in which the user prompt was asked.
         "response": final_ai_response,  # Model's answer to the user prompt

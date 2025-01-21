@@ -1,8 +1,20 @@
 # CODE_API  
   
 ## Overview  
-`code_api` is designed to capture metadata (in code) from each Azure OpenAI API call and store it in a MySQL or Cosmos database. The metadata captured includes prompts (system & user), tokens, completions, models, costs, and projects. This metadata is not limited and can be adjusted to capture more metadata based on needs. In the MySQL database, data is organized using a relational schema, ensuring efficient storage and retrieval at the project level. Conversely, in the Cosmos DB, data is stored in JSON format, allowing for flexible data types and eliminating the need for a rigid relational schema.
+`code_api` is designed to capture metadata (in code) from each Azure OpenAI API call and store it in a MySQL or Cosmos database. The metadata captured includes prompts (system & user), tokens, completions, models, costs, projects, and user credentials (Entra ID data for one user). This metadata is not limited and can be adjusted to capture more metadata based on needs. In the MySQL database, data is organized using a relational schema, ensuring efficient storage and retrieval at the project level. Conversely, in the Cosmos DB, data is stored in JSON format, allowing for flexible data types and eliminating the need for a rigid relational schema.
 ***Note: ONLY FOR Azure OpenAI Solutions that include regular chat and RAG methods***.  
+
+## Updates
+**1. Token Count Passing**:
+- Users now have the option to pass token counts for prompts and completions directly to the API, instead of relying on the API to conduct the token count. If no token count is provided in the payload, the API will proceed with counting the tokens for the given prompts and completions.
+- Azure OpenAI token counts for completions can be retrieved from the JSON response returned by the Azure OpenAI API.
+- User prompt tokens should be provided via the `user_prompt_tokens` parameter of the `code_api`, while AI completion tokens should be provided via the `response_tokens` parameter.
+
+**2. User Consumption Tracking**:
+- Users can now track their consumption of the Azure OpenAI API via `code_api`.
+- User data can be tracked using the identity service provider employed by the app hosting your Azure OpenAI application. When using the **Entra ID** service, user credentials can be tracked via app headers such as `X-MS-CLIENT-PRINCIPAL-ID` and `X-MS-CLIENT-PRINCIPAL-NAME`.
+- If no user credentials are provided to code_api via the current_user parameter, an empty string will be used for that user's identity.
+- To utilize this update with MySQL, please execute the `aoai_api_v3.sql` script to update the database schema, which includes a new user table to capture user data.
   
 ## Contents  
 This sub-directory contains 1 python API script and 3 python API tester scripts (Chat, RAG (Index), RAG (Query)):  
@@ -69,6 +81,8 @@ Note - The following data should be passed as payload to the API:
 ```python 
         data = {  
             "system_prompt": "",  # System prompt given to the AOAI model.
+
+            "current_user": "", # Entra ID object id for a user in the Entra tenant 
 
             "user_prompt": "",  # User prompt in which the end-user asks the model. 
 

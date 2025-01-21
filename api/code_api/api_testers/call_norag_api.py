@@ -3,9 +3,9 @@ This script is designed to test the MySQL API using eligible GPT models specific
 where Retrieval-Augmented Generation (RAG) is not needed.
 
 Update:
-- User prompt and response tokens are now passed to code-api as payload. (Can still pass None and these values will be calculated by API)
+- User data from Entra ID now passed to api via the "current_user" param. 
 
-Updated 01/03/25
+Updated 01/06/25
 '''
 
 import requests  
@@ -64,11 +64,12 @@ while True:
 
 
     # Call MySQL API to capture metadata (make sure api is running locally)
-    url = "https://code-api.azurewebsites.net/code_api"  
+    url = "https://code-api.azurewebsites.net/code_api"     
     
     # The following data must be sent as payload with each API request.
     data = {  
         "system_prompt": system_prompt,  # System prompt given to the AOAI model.
+        "current_user": "Disney Test User", # Entra ID object id for a user in the Entra tenant
         "user_prompt": user_prompt,  # User prompt in which the end-user asks the model. 
         "user_prompt_tokens": ai_response_dict['usage']['prompt_tokens'],
         "time_asked": time_asked, # Time in which the user prompt was asked.
@@ -80,7 +81,7 @@ while True:
         "region": "East US 2",  # Input your AOAI resource region here
         "project": "Disney Character (API Test)",  # Input your project name here. Following the system prompt for this test currently :)
         "api_name": url, # Input the url of the API used. 
-        "database": "mysqldb" # Specify here cosmosdb or mysql as database. 
+        "database": "mysqldb" # Specify here cosmosdb or mysqldb as database. 
     }  
     
     response = requests.post(url, headers={"Content-Type": "application/json"}, data=json.dumps(data))  
